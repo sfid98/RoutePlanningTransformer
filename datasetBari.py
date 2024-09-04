@@ -61,6 +61,8 @@ class ShortestPathDataset(Dataset):
         
         # Genera tutte le coppie di nodi
         nodes = list(self.G_renumbered.nodes())
+        print("numero permutazioni")
+        print(len(list(itertools.permutations(nodes, 2))))
         self.pairs = [(src, tgt) for src, tgt in itertools.permutations(nodes, 2)]
         
         # Seleziona un sottoinsieme di coppie

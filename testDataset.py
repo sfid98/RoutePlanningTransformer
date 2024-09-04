@@ -1,6 +1,6 @@
 import networkx as nx
 import osmnx as ox
-
+import matplotlib.pyplot as plt
 ox.settings.use_cache = True
 
 # download street network data from OSM and construct a MultiDiGraph model
@@ -31,3 +31,7 @@ fig, ax = ox.plot.plot_graph(
 # save graph as a geopackage or graphml file
 ox.io.save_graph_geopackage(G, filepath="./graph.gpkg")
 ox.io.save_graphml(G, filepath="./graph.graphml")
+
+
+nx.draw_planar(G, with_labels = True)
+plt.savefig("filename.png")
