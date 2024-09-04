@@ -113,7 +113,7 @@ class MultiHeadAttentionBlock(nn.Module):
         #print(mask.shape)
         if mask is not None:
             # Write a very low value (indicating -inf) to the positions where mask == 0
-            attention_scores.masked_fill_(mask == 1000, -1e9)
+            attention_scores.masked_fill_(mask == 0, -1e9)
         attention_scores = attention_scores.softmax(dim=-1) # (batch, h, seq_len, seq_len) # Apply softmax
         if dropout is not None:
             attention_scores = dropout(attention_scores)
@@ -231,14 +231,14 @@ class Transformer(nn.Module):
         # (batch, seq_len, vocab_size)
         return self.projection_layer(x)
     
-def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int, tgt_seq_len: int, d_model: int=512, N: int=6, h: int=8, dropout: float=0.1, d_ff: int=2048) -> Transformer:
+def build_transformer(max_num_nodes: int, d_model: int=512, N: int=6, h: int=8, dropout: float=0.1, d_ff: int=2048) -> Transformer:
     # Create the embedding layers
-    src_embed = InputEmbeddings(d_model, src_vocab_size, True)
-    tgt_embed = InputEmbeddings(d_model, tgt_vocab_size, False)
+    src_embed = InputEmbeddings(d_model, max_num_nodes, True)
+    tgt_embed = InputEmbeddings(d_model, max_num_nodes, False)
 
     # Create the positional encoding layers
-    src_pos = PositionalEncoding(d_model, src_seq_len, dropout)
-    tgt_pos = PositionalEncoding(d_model, tgt_seq_len, dropout)
+    src_pos = PositionalEncoding(d_model, max_num_nodes, dropout)
+    tgt_pos = PositionalEncoding(d_model, max_num_nodes, dropout)
     
     # Create the encoder blocks
     encoder_blocks = []
@@ -262,7 +262,7 @@ def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int
     decoder = Decoder(d_model, nn.ModuleList(decoder_blocks))
     
     # Create the projection layer
-    projection_layer = ProjectionLayer(d_model, tgt_vocab_size)
+    projection_layer = ProjectionLayer(d_model, max_num_nodes)
     
     # Create the transformer
     transformer = Transformer(encoder, decoder, src_embed, tgt_embed, src_pos, tgt_pos, projection_layer)
