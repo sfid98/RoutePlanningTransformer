@@ -5,34 +5,22 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset, random_split
 import torch.nn as nn
 from sklearn.model_selection import train_test_split
-from modelRoutePlanning import build_transformer
+from modelRoutePlanningv1 import build_transformer
+from random import randint
 
-# Funzione per generare un grafo casuale e calcolare il percorso più breve
-def generate_graph_and_shortest_path(num_nodes, num_edges):
 
-    G = nx.gnm_random_graph(num_nodes, num_edges)
-    adj_matrix = nx.adjacency_matrix(G).todense()
-    src, tgt = 0, num_nodes - 1  # Definiamo i nodi di partenza e arrivo
-    try:
-        shortest_path = nx.shortest_path(G, source=src, target=tgt)
-    except nx.NetworkXNoPath:
-        shortest_path = []  # Nessun percorso disponibile
-    return torch.tensor(adj_matrix, dtype=torch.float32), shortest_path
-
-# Dataset personalizzato per gestire il training
+# Dataset personalizzato per gestire il training (come sopra)
 class ShortestPathDataset(Dataset):
-    def __init__(self, num_graphs, num_nodes, num_edges):
-        self.num_graphs = num_graphs
-        self.num_nodes = num_nodes
-        self.num_edges = num_edges
-        self.data = []
-        for _ in range(num_graphs):
-            adj_matrix, shortest_path = generate_graph_and_shortest_path(num_nodes, num_edges)
-            max_path_len = num_nodes
-            shortest_path_tensor = torch.full((max_path_len,), 0, dtype=torch.long)  # Padding con 0
-            if len(shortest_path) > 0:
-                shortest_path_tensor[:len(shortest_path)] = torch.tensor(shortest_path, dtype=torch.long)
-            self.data.append((adj_matrix, shortest_path_tensor))
+    def __init__(self, data=None, num_graphs=None, num_nodes=None, num_edges=None):
+        if data:
+            self.data = data
+        else:
+            self.data = []
+            self._generate_data(num_graphs, num_nodes, num_edges)
+
+    def _generate_data(self, num_graphs, num_nodes, num_edges):
+        # Funzione per generare i dati (come sopra)
+        pass
 
     def __len__(self):
         return len(self.data)
@@ -40,21 +28,22 @@ class ShortestPathDataset(Dataset):
     def __getitem__(self, idx):
         return self.data[idx]
 
-# Impostazioni del modello
-num_nodes = 10
-num_edges = 20
+
+num_nodes = 50
 d_model = 512
 n_heads = 8
 num_layers = 6
 dropout = 0.1
 d_ff = 2048
 batch_size = 16
-num_graphs = 100
 num_epochs = 10
+# Caricamento del dataset
+loaded_data = torch.load('shortest_path_dataset.pt')
 
-# Creazione del dataset e del dataloader
-# Creazione del dataset e del dataloader
-dataset = ShortestPathDataset(num_graphs, num_nodes, num_edges)
+# Creazione di un'istanza di ShortestPathDataset usando i dati caricati
+dataset = ShortestPathDataset(data=loaded_data)
+
+print(f"Dataset caricato con {len(dataset)} grafi.")
 
 # Divisione del dataset in train e validation set (80% train, 20% validation)
 train_size = int(0.8 * len(dataset))
@@ -125,7 +114,12 @@ print(f"Model saved to {model_path}")
 
 # Testing del modello
 transformer.eval()
-test_dataset = ShortestPathDataset(10, num_nodes, num_edges)  # Generazione di 10 nuovi grafi per il test
+
+loaded_test_data = torch.load('shortest_path_dataset1.pt')
+
+# Creazione di un'istanza di ShortestPathDataset usando i dati caricati
+test_dataset = ShortestPathDataset(data=loaded_test_data)
+print("Dataset caricato da 'shortest_path_dataset1.pt'")
 test_loader = DataLoader(test_dataset, batch_size=batch_size)
 
 with torch.no_grad():

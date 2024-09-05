@@ -11,7 +11,7 @@ import random
 import itertools
 
 
-# Carica il grafo stradale
+# Load the graph network
 def load_graph():
     G = ox.graph.graph_from_point((41.103995, 16.875448), dist=750, network_type="drive")
     return G
