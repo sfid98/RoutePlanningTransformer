@@ -113,7 +113,7 @@ class MultiHeadAttentionBlock(nn.Module):
         #print(mask.shape)
         if mask is not None:
             # Write a very low value (indicating -inf) to the positions where mask == 0
-            attention_scores.masked_fill_(mask == 1000, -1e9)
+            attention_scores.masked_fill_(mask == 0, -1e9)
         attention_scores = attention_scores.softmax(dim=-1) # (batch, h, seq_len, seq_len) # Apply softmax
         if dropout is not None:
             attention_scores = dropout(attention_scores)
